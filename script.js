@@ -1,578 +1,837 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizza Hut - Shift Scheduler</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #f15a24;
-            --primary-light: #ff8a5c;
-            --primary-dark: #b82600;
-            --secondary: #2d2d2d;
-            --light: #f8f9fa;
-            --dark: #343a40;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-        }
-        
-        body {
-            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background-color: #f5f7fa;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--light-gray);
-            position: relative;
-        }
-        
-        .header h1 {
-            color: var(--primary);
-            font-weight: 700;
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-        }
-        
-        .header p {
-            color: var(--gray);
-            font-size: 1.1rem;
-            margin-bottom: 0;
-        }
-        
-        .btn {
-            font-weight: 500;
-            border-radius: 6px;
-            padding: 8px 16px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .btn i {
-            font-size: 1.1em;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-        
-        .btn-success {
-            background-color: var(--success);
-            border-color: var(--success);
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-            transform: translateY(-1px);
-        }
-        
-        .btn-outline-secondary {
-            color: var(--gray);
-            border-color: var(--gray);
-        }
-        
-        .btn-outline-secondary:hover {
-            background-color: var(--light);
-            color: var(--dark);
-            border-color: var(--gray);
-        }
-        
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .card-header {
-            background-color: white;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            font-weight: 600;
-            padding: 15px 20px;
-            border-radius: 10px 10px 0 0 !important;
-        }
-        
-        .table {
-            margin-bottom: 0;
-        }
-        
-        .table th {
-            background-color: var(--primary);
-            color: white;
-            font-weight: 500;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-            padding: 12px 8px;
-            vertical-align: middle;
-            border: none;
-        }
-        
-        .table td {
-            padding: 12px 8px;
-            vertical-align: middle;
-            border-color: #edf2f7;
-        }
-        
-        .table tbody tr {
-            transition: background-color 0.2s ease;
-        }
-        
-        .table tbody tr:hover {
-            background-color: rgba(241, 90, 36, 0.05);
-        }
-        
-        .shift-cell {
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-            font-weight: 500;
-            border-radius: 4px;
-        }
-        
-        .shift-cell:hover {
-            transform: scale(1.03);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 1;
-        }
-        
-        .shift-cell:focus {
-            outline: 2px solid var(--primary);
-            z-index: 2;
-        }
-        
-        .off {
-            background-color: #ffebee;
-            color: #d32f2f;
-            font-weight: 600;
-        }
-        
-        .shift-7-4 { 
-            background-color: #e8f5e9; 
-            color: #2e7d32;
-        }
-        .shift-8-5 { 
-            background-color: #e3f2fd; 
-            color: #1565c0;
-        }
-        .shift-12-9 { 
-            background-color: #fff3e0; 
-            color: #e65100;
-        }
-        .shift-5-2 { 
-            background-color: #f3e5f5; 
-            color: #7b1fa2;
-        }
-        .shift-12-12 { 
-            background-color: #e8eaf6; 
-            color: #303f9f;
-        }
-        
-        .employee-name {
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        
-        .employee-role {
-            font-size: 0.8rem;
-            color: var(--gray);
-            display: block;
-            margin-top: 2px;
-        }
-        
-        .manager { 
-            border-left: 4px solid var(--primary);
-            background-color: rgba(241, 90, 36, 0.03);
-        }
-        
-        .supervisor { 
-            border-left: 4px solid var(--warning);
-            background-color: rgba(255, 193, 7, 0.05);
-        }
-        
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            font-size: 0.85rem;
-            background: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            margin-right: 6px;
-        }
-        
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .date-navigation {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .current-week {
-            font-weight: 600;
-            color: var(--primary);
-            background: rgba(241, 90, 36, 0.1);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.95rem;
-        }
-        
-        .nav-btn {
-            background: none;
-            border: 1px solid var(--light-gray);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray);
-            transition: all 0.2s;
-        }
-        
-        .nav-btn:hover {
-            background: var(--light);
-            color: var(--primary);
-            border-color: var(--primary-light);
-        }
-        
-        .today-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .today-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-        }
+// Application state
+const state = {
+    employees: [],
+    currentWeekStart: null,
+    showOnlyWorking: false,
+    // Available roles with their display names and colors
+    roles: {
+        'Manager': { color: '#f15a24', icon: 'bi-star-fill' },
+        'Supervisor': { color: '#ffc107', icon: 'bi-shield-check' },
+        'Team Member': { color: '#6c757d', icon: 'bi-person' },
+        'Delivery Driver': { color: '#0d6efd', icon: 'bi-truck' },
+        'Cook': { color: '#dc3545', icon: 'bi-egg-fried' },
+        'Cashier': { color: '#198754', icon: 'bi-cash-coin' }
+    },
+    // Available shifts with their display names and colors
+    shifts: {
+        '7--4': { name: 'Morning', color: '#e8f5e9', textColor: '#2e7d32' },
+        '8--5': { name: 'Day', color: '#e3f2fd', textColor: '#1565c0' },
+        '12--9': { name: 'Swing', color: '#fff3e0', textColor: '#e65100' },
+        '5--2': { name: 'Evening', color: '#f3e5f5', textColor: '#7b1fa2' },
+        '12--12': { name: 'Double', color: '#e8eaf6', textColor: '#303f9f' },
+        'OFF': { name: 'OFF', color: '#ffebee', textColor: '#d32f2f' }
+    },
+    // Days of the week in order
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+};
 
-        .employee-actions {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-
-        tr:hover .employee-actions {
-            opacity: 1;
-        }
-
-        .btn-edit:hover, .btn-delete:hover {
-            transform: scale(1.1);
-        }
-        
-        @media (max-width: 992px) {
-            .container {
-                padding: 15px;
-            }
-            
-            .table-responsive {
-                border-radius: 8px;
-                border: 1px solid #edf2f7;
-            }
-            
-            .table th, 
-            .table td {
-                padding: 10px 6px;
-                font-size: 0.85rem;
-            }
-            
-            .employee-name {
-                font-size: 0.9rem;
-            }
-            
-            .employee-role {
-                font-size: 0.75rem;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .btn {
-                padding: 6px 12px;
-                font-size: 0.85rem;
-            }
-            
-            .btn i {
-                font-size: 1em;
-            }
-            
-            .date-navigation {
-                justify-content: space-between;
-                width: 100%;
-                margin-top: 10px;
-            }
-            
-            .table th {
-                font-size: 0.7rem;
-                padding: 8px 4px;
-            }
-            
-            .table td {
-                padding: 8px 4px;
-                font-size: 0.8rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .btn-group {
-                width: 100%;
-                justify-content: space-between;
-            }
-            
-            .btn {
-                flex: 1;
-                justify-content: center;
-            }
-            
-            .current-week {
-                font-size: 0.8rem;
-                padding: 4px 10px;
-            }
-            
-            .nav-btn {
-                width: 32px;
-                height: 32px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Pizza Hut Shift Scheduler <i class="bi bi-calendar-week"></i></h1>
-            <p>Efficiently manage your team's work schedule</p>
-        </div>
-        
-        <div class="controls">
-            <div class="btn-group">
-                <button id="addEmployee" class="btn btn-primary">
-                    <i class="bi bi-person-plus"></i> Add Employee
-                </button>
-                <button id="generateSchedule" class="btn btn-success">
-                    <i class="bi bi-magic"></i> Auto-Generate
-                </button>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-download"></i> Export
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                        <li><a class="dropdown-item" href="#" id="exportJPG"><i class="bi bi-file-earmark-image"></i> JPG</a></li>
-                        <li><a class="dropdown-item" href="#" id="exportPDF"><i class="bi bi-file-earmark-pdf"></i> PDF</a></li>
-                        <li><a class="dropdown-item" href="#" id="exportExcel"><i class="bi bi-file-earmark-excel"></i> Excel</a></li>
-                        <li><a class="dropdown-item" href="#" id="printSchedule"><i class="bi bi-printer"></i> Print</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="date-navigation">
-                <button id="prevWeek" class="nav-btn" title="Previous Week">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                <span id="currentWeek" class="current-week"></span>
-                <button id="nextWeek" class="nav-btn" title="Next Week">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                <button id="todayBtn" class="today-btn">
-                    Today
-                </button>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Weekly Schedule</span>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="showOnlyWorking" style="cursor: pointer;">
-                    <label class="form-check-label" for="showOnlyWorking" style="cursor: pointer; font-size: 0.9rem;">
-                        Show only working employees
-                    </label>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <div id="schedule">
-                    <!-- Schedule table will be generated here by JavaScript -->
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4">
-            <div class="card-header">
-                <i class="bi bi-info-circle"></i> Quick Guide
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5><i class="bi bi-mouse"></i> How to Use</h5>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success"></i> <strong>Click</strong> any cell to edit shift</li>
-                            <li><i class="bi bi-arrow-repeat text-primary"></i> Type shift (e.g., 8-5, 12-9) or 'OFF'</li>
-                            <li><i class="bi bi-arrow-left-right"></i> Navigate between weeks using arrows</li>
-                            <li><i class="bi bi-calendar-check"></i> Click 'Today' to return to current week</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5><i class="bi bi-palette"></i> Shift Legend</h5>
-                        <div class="legend">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e3f2fd;"></span>
-                                <span>8-5 (Morning)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #fff3e0;"></span>
-                                <span>12-9 (Mid)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e8f5e9;"></span>
-                                <span>7-4 (Evening)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #f3e5f5;"></span>
-                                <span>5-2 (Late)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e8eaf6;"></span>
-                                <span>12-12 (Long)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #ffebee;"></span>
-                                <span>OFF</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Employee Modal -->
-        <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="employeeModalLabel">Add New Employee</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="employeeForm">
-                            <div class="mb-3">
-                                <label for="employeeName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="employeeName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="employeeRole" class="form-label">Role</label>
-                                <select class="form-select" id="employeeRole" required>
-                                    <option value="Team Member">Team Member</option>
-                                    <option value="Supervisor">Supervisor</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Delivery Driver">Delivery Driver</option>
-                                    <option value="Cook">Cook</option>
-                                    <option value="Cashier">Cashier</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Default Availability</label>
-                                <div class="availability-grid">
-                                    <!-- Will be populated by JavaScript -->
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="saveEmployee">Save Employee</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+// Create and append styles
+const style = document.createElement('style');
+style.textContent = `
+    .off {
+        background-color: #fff3cd !important;
+        color: #856404;
+        font-weight: bold;
+    }
     
-    <!-- Add Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Add SheetJS for Excel export -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <!-- Add jsPDF for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <!-- Add html2canvas for image export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Main application script -->
-    <script src="script.js"></script>
-</body>
-</html>
+    .shift-7-4, .shift-8-5 {
+        background-color: #e8f5e9; /* Light green for morning shifts */
+    }
+    .shift-12-9 {
+        background-color: #fff3e0; /* Light orange for evening shifts */
+    }
+    .shift-5-2 {
+        background-color: #f3e5f5; /* Light purple for night shifts */
+    }
+    .shift-12-12 {
+        background-color: #ffebee; /* Light red for long shifts */
+    }
+    
+    .manager { 
+        border-left: 3px solid #f15a24;
+        font-weight: bold;
+    }
+    
+    .supervisor { 
+        border-left: 3px solid #ffc107;
+        font-weight: bold;
+    }
+    
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    th, td {
+        border: 1px solid #dee2e6;
+        padding: 8px;
+        text-align: center;
+    }
+    
+    th {
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+    }
+    
+    tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    tr:hover {
+        background-color: #e9ecef;
+    }
+    
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #schedule, #schedule * {
+            visibility: visible;
+        }
+        #schedule {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize sample employees if none exist in localStorage
+function initializeSampleData() {
+    if (state.employees.length === 0) {
+        // Clear any existing employees
+        state.employees = [];
+        state.employees = [
+            createEmployee('DIDIER', 'Manager', {
+                'Friday': '8--5', 'Saturday': '8--5', 'Sunday': '8--5',
+                'Monday': 'OFF', 'Tuesday': 'OFF', 'Wednesday': '12--12', 'Thursday': '12--12'
+            }),
+            createEmployee('MAHMOUD', 'Supervisor', {
+                'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
+                'Monday': '12--9', 'Tuesday': '12--9', 'Wednesday': 'OFF', 'Thursday': 'OFF'
+            }),
+            createEmployee('GEOFFREY', 'Team Member', {
+                'Friday': '8--5', 'Saturday': '8--5', 'Sunday': '8--5',
+                'Monday': '8--5', 'Tuesday': 'OFF', 'Wednesday': '8--5', 'Thursday': '8--5'
+            }),
+            createEmployee('FAISAL', 'Team Member', {
+                'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
+                'Monday': '12--9', 'Tuesday': '12--9', 'Wednesday': '12--9', 'Thursday': '12--9'
+            }),
+            createEmployee('ABDULRAHMAN', 'Team Member', {
+                'Friday': '5--2', 'Saturday': '5--2', 'Sunday': '5--2',
+                'Monday': '5--2', 'Tuesday': '5--2', 'Wednesday': '5--2', 'Thursday': '5--2'
+            }),
+            createEmployee('MOHAMMED', 'Team Member', {
+                'Friday': '7--4', 'Saturday': '7--4', 'Sunday': '7--4',
+                'Monday': '7--4', 'Tuesday': '7--4', 'Wednesday': '7--4', 'Thursday': '7--4'
+            })
+        ];
+        saveToLocalStorage();
+    }
+}
+
+// Create a new employee object
+function createEmployee(name, role, shifts = {}) {
+    const defaultShifts = {};
+    state.days.forEach(day => {
+        defaultShifts[day] = shifts[day] || 'OFF';
+    });
+    
+    const employee = {
+        id: Date.now() + Math.floor(Math.random() * 1000), // Simple unique ID
+        name: name.trim(),
+        role: role || 'Team Member',
+        shifts: { ...defaultShifts, ...shifts },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    
+    state.employees.push(employee);
+    saveToLocalStorage();
+    return employee;
+}
+
+// Get the current week's start date (Sunday)
+function getWeekStartDate(date = new Date()) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day; // 0 for Sunday, 1 for Monday, etc.
+    return new Date(d.setDate(diff));
+}
+
+// Generate dates for the current week
+function getWeekDates(startDate) {
+    const dates = [];
+    const currentDate = new Date(startDate);
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(currentDate);
+        date.setDate(currentDate.getDate() + i);
+        
+        dates.push({
+            date: date.getDate(),
+            day: state.days[date.getDay()],
+            month: date.getMonth() + 1,
+            year: date.getFullYear(),
+            fullDate: new Date(date)
+        });
+    }
+    
+    return dates;
+}
+
+// Format date as YYYY-MM-DD
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+// Format date as "Day, Month DD, YYYY"
+function formatDisplayDate(date) {
+    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Get week range text (e.g., "Oct 2 - Oct 8, 2023")
+function getWeekRangeText(startDate) {
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    
+    const startMonth = startDate.toLocaleString('default', { month: 'short' });
+    const endMonth = endDate.toLocaleString('default', { month: 'short' });
+    const year = startDate.getFullYear();
+    
+    if (startMonth === endMonth) {
+        return `${startMonth} ${startDate.getDate()} - ${endDate.getDate()}, ${year}`;
+    } else {
+        return `${startMonth} ${startDate.getDate()} - ${endMonth} ${endDate.getDate()}, ${year}`;
+    }
+}
+
+// Parse shift input from user
+function parseShiftInput(input) {
+    if (!input) return 'OFF';
+    
+    const trimmed = input.toString().trim().toUpperCase();
+    
+    // Handle 'OFF' case
+    if (trimmed === 'OFF') return 'OFF';
+    
+    // Try to parse time formats like 8-5, 8:00-17:00, 8am-5pm, etc.
+    const timeRegex = /^(\d{1,2})(?::(\d{2}))?\s*([aApP][mM]?)?\s*-\s*(\d{1,2})(?::(\d{2}))?\s*([aApP][mM]?)?$/;
+    const match = trimmed.match(timeRegex);
+    
+    if (match) {
+        let [_, startHr, startMin, startPeriod, endHr, endMin, endPeriod] = match;
+        
+        // Convert to 24-hour format
+        const parseHour = (hour, period) => {
+            hour = parseInt(hour, 10);
+            period = (period || '').toLowerCase();
+            
+            if (period.includes('p') && hour < 12) {
+                hour += 12;
+            } else if (period.includes('a') && hour === 12) {
+                hour = 0;
+            }
+            
+            return hour;
+        };
+        
+        const startHour = parseHour(startHr, startPeriod);
+        const endHour = parseHour(endHr, endPeriod);
+        
+        // Map to closest standard shift
+        const shiftMap = {
+            '7--4': { start: 7, end: 16 },
+            '8--5': { start: 8, end: 17 },
+            '12--9': { start: 12, end: 21 },
+            '5--2': { start: 17, end: 2 },
+            '12--12': { start: 12, end: 12 }
+        };
+        
+        let closestShift = '8--5';
+        let minDiff = Infinity;
+        
+        Object.entries(shiftMap).forEach(([shift, { start, end }]) => {
+            const startDiff = Math.abs(start - startHour);
+            const endDiff = Math.abs((end === 2 ? 26 : end) - (endHour < 6 ? endHour + 24 : endHour));
+            const totalDiff = startDiff + endDiff;
+            
+            if (totalDiff < minDiff) {
+                minDiff = totalDiff;
+                closestShift = shift;
+            }
+        });
+        
+        return closestShift;
+    }
+    
+    // If no match, check if it's a known shift
+    if (state.shifts[trimmed]) {
+        return trimmed;
+    }
+    
+    // Default to OFF if input is not recognized
+    return 'OFF';
+}
+
+// Get shift display text
+function getShiftDisplay(shift) {
+    return state.shifts[shift]?.name || shift;
+}
+
+// Update the current week display
+function updateWeekDisplay() {
+    const weekStart = state.currentWeekStart;
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    
+    document.getElementById('currentWeek').textContent = getWeekRangeText(weekStart);
+    
+    // Highlight today's date
+    const today = new Date();
+    const weekDates = getWeekDates(weekStart);
+    
+    weekDates.forEach((date, index) => {
+        const isToday = date.date === today.getDate() && 
+                        date.month === today.getMonth() + 1 && 
+                        date.year === today.getFullYear();
+        
+        const dayElement = document.querySelector(`.date-header[data-day="${date.day}"]`);
+        if (dayElement) {
+            dayElement.classList.toggle('today', isToday);
+        }
+    });
+}
+
+// Render the schedule table
+function renderSchedule() {
+    const scheduleContainer = document.getElementById('schedule');
+    const weekDates = getWeekDates(state.currentWeekStart);
+    
+    // Filter employees based on showOnlyWorking filter
+    const filteredEmployees = state.showOnlyWorking 
+        ? state.employees.filter(emp => 
+            Object.values(emp.shifts).some(shift => shift !== 'OFF')
+          )
+        : [...state.employees];
+    
+    // Sort employees by role (managers first, then supervisors, then others)
+    const roleOrder = { 'Manager': 1, 'Supervisor': 2 };
+    filteredEmployees.sort((a, b) => {
+        const roleA = roleOrder[a.role] || 3;
+        const roleB = roleOrder[b.role] || 3;
+        return roleA - roleB || a.name.localeCompare(b.name);
+    });
+    
+    // Create table element
+    const table = document.createElement('table');
+    table.className = 'table table-hover align-middle';
+    
+    // Create table header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Add employee header
+    const employeeHeader = document.createElement('th');
+    employeeHeader.textContent = 'Employee';
+    employeeHeader.style.minWidth = '150px'; // Set a min-width instead of fixed
+    headerRow.appendChild(employeeHeader);
+    
+    // Add date headers
+    weekDates.forEach(dateInfo => {
+        const th = document.createElement('th');
+        th.className = 'text-center';
+        th.innerHTML = `
+            <div class="d-flex flex-column">
+                <span class="date-header fw-bold" data-day="${dateInfo.day}">${dateInfo.day.substring(0, 3)}</span>
+                <span class="small">${dateInfo.month}/${dateInfo.date}</span>
+            </div>
+        `;
+        headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create table body
+    const tbody = document.createElement('tbody');
+    
+    if (filteredEmployees.length === 0) {
+        const emptyRow = document.createElement('tr');
+        const emptyCell = document.createElement('td');
+        emptyCell.colSpan = 8;
+        emptyCell.className = 'text-center py-4 text-muted';
+        emptyCell.textContent = state.showOnlyWorking 
+            ? 'No employees are scheduled to work this week.' 
+            : 'No employees found. Click "Add Employee" to get started.';
+        emptyRow.appendChild(emptyCell);
+        tbody.appendChild(emptyRow);
+    } else {
+        // Add employee rows
+        filteredEmployees.forEach(employee => {
+            const row = document.createElement('tr');
+            
+            // Add employee info cell
+            const nameCell = document.createElement('td');
+            nameCell.className = 'position-relative';
+            
+            // Add role-based styling
+            const roleInfo = state.roles[employee.role] || {};
+            const roleClass = employee.role === 'Manager' ? 'manager' : 
+                             employee.role === 'Supervisor' ? 'supervisor' : '';
+            
+            nameCell.innerHTML = `
+                <div class="d-flex align-items-center ${roleClass} ps-2 py-1">
+                    ${roleInfo.icon ? `<i class="${roleInfo.icon} me-2" style="color: ${roleInfo.color}"></i>` : ''}
+                    <div>
+                        <div class="employee-name">${employee.name}</div>
+                        <small class="employee-role">${employee.role}</small>
+                    </div>
+                </div>
+                <div class="employee-actions position-absolute end-0 top-0 h-100 align-items-center pe-2">
+                    <button class="btn btn-sm btn-outline-secondary btn-edit" data-id="${employee.id}" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete ms-1" data-id="${employee.id}" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            
+            row.appendChild(nameCell);
+            
+            // Add shift cells for each day
+            weekDates.forEach(dateInfo => {
+                const cell = document.createElement('td');
+                cell.className = 'shift-cell text-center';
+                
+                const shift = employee.shifts[dateInfo.day] || 'OFF';
+                const shiftInfo = state.shifts[shift] || {};
+                
+                // Set cell content and styling
+                cell.textContent = getShiftDisplay(shift);
+                cell.contentEditable = 'true';
+                cell.style.backgroundColor = shiftInfo.color || 'transparent';
+                cell.style.color = shiftInfo.textColor || 'inherit';
+                cell.style.borderRadius = '4px';
+                cell.style.padding = '8px 4px';
+                cell.style.transition = 'all 0.2s';
+                
+                // Add data attributes for easy reference
+                cell.dataset.employeeId = employee.id;
+                cell.dataset.day = dateInfo.day;
+                
+                // Add event listeners for editing shifts
+                cell.addEventListener('click', (e) => {
+                    if (cell.contentEditable === 'true') {
+                        e.stopPropagation();
+                        cell.focus();
+                    }
+                });
+                
+                cell.addEventListener('focus', () => {
+                    cell.style.boxShadow = '0 0 0 2px rgba(241, 90, 36, 0.5)';
+                    cell.style.zIndex = '10';
+                    cell.style.position = 'relative';
+                });
+                
+                cell.addEventListener('blur', () => {
+                    const day = cell.dataset.day;
+                    const input = cell.textContent.trim();
+                    const newShift = parseShiftInput(input);
+                    
+                    if (newShift !== null) {
+                        employee.shifts[day] = newShift === 'OFF' ? undefined : newShift;
+                        updateCellAppearance(cell, newShift);
+                        saveToLocalStorage();
+                    } else {
+                        // Revert to previous value if invalid
+                        cell.textContent = getShiftDisplay(shift);
+                    }
+                });
+            
+            row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+    });
+    
+    table.appendChild(tbody);
+    
+    // Clear and append the schedule container
+    scheduleContainer.innerHTML = ''; // Clear previous content
+    scheduleContainer.appendChild(table);
+
+    // Add event listeners for edit and delete buttons
+    tbody.addEventListener('click', (e) => {
+        const editButton = e.target.closest('.btn-edit');
+        const deleteButton = e.target.closest('.btn-delete');
+
+        if (editButton) {
+            const employeeId = parseInt(editButton.dataset.id, 10);
+            showEditEmployeeModal(employeeId);
+        }
+
+        if (deleteButton) {
+            const employeeId = parseInt(deleteButton.dataset.id, 10);
+            deleteEmployee(employeeId);
+        }
+    });
+    }
+}
+
+
+// Update cell appearance
+function updateCellAppearance(cell, shift) {
+    // Remove all shift-related classes
+    cell.className = '';
+    
+    if (shift === 'OFF') {
+        cell.classList.add('off');
+        cell.textContent = 'OFF';
+    } else {
+        const shiftClass = `shift-${shift.replace('--', '-')}`;
+        cell.classList.add(shiftClass);
+        cell.textContent = getShiftDisplay(shift);
+    }
+}
+
+// Save employees to local storage
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('pizzahutSchedule', JSON.stringify({
+            employees: state.employees,
+            currentWeekStart: state.currentWeekStart.toISOString(),
+            showOnlyWorking: state.showOnlyWorking
+        }));
+    } catch (e) {
+        console.error('Error saving to localStorage:', e);
+    }
+}
+
+// Load employees from local storage
+function loadFromLocalStorage() {
+    try {
+        const savedData = localStorage.getItem('pizzahutSchedule');
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            state.employees = data.employees || [];
+            if (data.currentWeekStart) {
+                state.currentWeekStart = new Date(data.currentWeekStart);
+            }
+            if (data.showOnlyWorking !== undefined) {
+                state.showOnlyWorking = data.showOnlyWorking;
+                                const showWorkingOnlyCheckbox = document.getElementById('showOnlyWorking');
+                if (showWorkingOnlyCheckbox) {
+                    showWorkingOnlyCheckbox.checked = state.showOnlyWorking;
+                }
+            }
+        } else {
+            state.employees = [];
+        }
+    } catch (e) {
+        console.error('Error loading from localStorage:', e);
+        state.employees = [];
+    }
+}
+
+// =================================================================================
+// Initialization & Event Listeners
+// =================================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded. Initializing application...');
+    
+    // Load data from local storage
+    loadFromLocalStorage();
+
+    // If no week start is loaded, set it to the current week's Sunday
+    if (!state.currentWeekStart) {
+        state.currentWeekStart = getWeekStartDate(new Date());
+    }
+
+    // Initialize sample data if no employees exist
+    if (state.employees.length === 0) {
+        console.log('No employees found. Initializing sample data.');
+        initializeSampleData();
+    }
+
+    // Set up all event listeners for buttons and controls
+    setupEventListeners();
+
+    // Render the initial schedule display
+    updateWeekDisplay();
+    renderSchedule();
+
+    console.log('Application initialized successfully.');
+});
+
+function navigateWeek(days) {
+    state.currentWeekStart.setDate(state.currentWeekStart.getDate() + days);
+    updateWeekDisplay();
+    renderSchedule();
+    saveToLocalStorage();
+}
+
+function goToCurrentWeek() {
+    state.currentWeekStart = getWeekStartDate(new Date());
+    updateWeekDisplay();
+    renderSchedule();
+    saveToLocalStorage();
+}
+
+function setupEventListeners() {
+    console.log('Setting up event listeners...');
+
+    // Helper to safely add event listeners
+    const addListener = (id, event, handler) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener(event, handler);
+        } else {
+            console.error(`Element with ID '${id}' not found.`);
+        }
+    };
+
+    // Main controls
+    addListener('addEmployee', 'click', showAddEmployeeModal);
+    addListener('generateSchedule', 'click', generateSchedule);
+    addListener('printSchedule', 'click', printSchedule);
+    addListener('exportExcel', 'click', exportToExcel);
+    addListener('exportPDF', 'click', exportToPDF);
+   addListener('exportJPG', 'click', exportToJPG);
+
+    // Week navigation
+    addListener('prevWeek', 'click', () => navigateWeek(-7));
+    addListener('nextWeek', 'click', () => navigateWeek(7));
+    addListener('currentWeek', 'click', goToCurrentWeek);
+    addListener('todayBtn', 'click', goToCurrentWeek);
+
+    // Other UI controls
+        addListener('showOnlyWorking', 'change', (e) => {
+        state.showOnlyWorking = e.target.checked;
+        renderSchedule();
+        saveToLocalStorage();
+    });
+    
+    console.log('Event listeners setup complete.');
+}
+
+function showAddEmployeeModal() {
+    console.log('`showAddEmployeeModal` called.');
+
+    // Use the existing Bootstrap modal from index.html
+    const modalElement = document.getElementById('employeeModal');
+    if (!modalElement) {
+        console.error('Employee modal not found in HTML.');
+        return;
+    }
+
+    const employeeModal = new bootstrap.Modal(modalElement);
+
+    // Clear previous input
+    document.getElementById('employeeName').value = '';
+    document.getElementById('employeeRole').selectedIndex = 0;
+
+    // Setup save button listener
+    const saveButton = document.getElementById('saveEmployee');
+    
+    // Clone and replace the button to remove old listeners
+    const newSaveButton = saveButton.cloneNode(true);
+    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+
+    newSaveButton.addEventListener('click', () => {
+        const name = document.getElementById('employeeName').value.trim();
+        const role = document.getElementById('employeeRole').value;
+
+        if (name) {
+            createEmployee(name, role);
+            employeeModal.hide();
+        } else {
+            alert('Please enter a name for the employee.');
+            document.getElementById('employeeName').focus();
+        }
+    });
+
+    employeeModal.show();
+}
+
+
+function showEditEmployeeModal(employeeId) {
+    const employee = state.employees.find(emp => emp.id === employeeId);
+    if (!employee) {
+        console.error('Employee not found for editing.');
+        return;
+    }
+
+    const modalElement = document.getElementById('employeeModal');
+    const employeeModal = new bootstrap.Modal(modalElement);
+
+    // Update modal for editing
+    document.getElementById('employeeModalLabel').textContent = 'Edit Employee';
+    document.getElementById('employeeName').value = employee.name;
+    document.getElementById('employeeRole').value = employee.role;
+
+    const saveButton = document.getElementById('saveEmployee');
+    const newSaveButton = saveButton.cloneNode(true);
+    saveButton.parentNode.replaceChild(newSaveButton, saveButton);
+
+    newSaveButton.textContent = 'Save Changes';
+    newSaveButton.addEventListener('click', () => {
+        const newName = document.getElementById('employeeName').value.trim();
+        const newRole = document.getElementById('employeeRole').value;
+
+        if (newName) {
+            employee.name = newName;
+            employee.role = newRole;
+            employee.updatedAt = new Date().toISOString();
+            saveToLocalStorage();
+            renderSchedule();
+            employeeModal.hide();
+        } else {
+            alert('Employee name cannot be empty.');
+        }
+    });
+
+    employeeModal.show();
+}
+
+function deleteEmployee(employeeId) {
+    const employeeIndex = state.employees.findIndex(emp => emp.id === employeeId);
+    if (employeeIndex === -1) {
+        console.error('Employee not found for deletion.');
+        return;
+    }
+
+    const employeeName = state.employees[employeeIndex].name;
+    if (confirm(`Are you sure you want to delete ${employeeName}? This action cannot be undone.`)) {
+        state.employees.splice(employeeIndex, 1);
+        saveToLocalStorage();
+        renderSchedule();
+    }
+}
+
+// Generate schedule automatically
+function generateSchedule() {
+    if (!confirm('This will update shifts for all team members. Continue?')) {
+        return;
+    }
+    
+    // Simple scheduling algorithm
+    state.employees.forEach((employee, index) => {
+        // Skip if manager or supervisor (they have fixed schedules)
+        if (['Manager', 'Supervisor'].includes(employee.role)) {
+            return;
+        }
+        
+        // For team members, assign shifts based on their position in the array
+        const shiftPatterns = ['8--5', '12--9', '5--2', '7--4'];
+        const shiftIndex = index % shiftPatterns.length;
+        const shift = shiftPatterns[shiftIndex];
+        
+        // Update shifts for each day
+        state.days.forEach(day => {
+            employee.shifts[day] = shift;
+        });
+    });
+    
+    saveToLocalStorage();
+    renderSchedule();
+    alert('Schedule generated successfully!');
+}
+
+// Print the schedule
+function printSchedule() {
+    // Add print-specific styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @media print {
+            .no-print, .btn, .form-control, .input-group-text {
+                display: none !important;
+            }
+            body {
+                background: white;
+                font-size: 12px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 10px;
+                box-shadow: none;
+            }
+            table {
+                width: 100%;
+                font-size: 11px;
+            }
+            th, td {
+                padding: 4px !important;
+            }
+        }
+    `;
+    
+    // Add the styles to the head
+    document.head.appendChild(style);
+    
+    // Print the page
+    window.print();
+    
+    // Remove the styles after printing
+    setTimeout(() => {
+        document.head.removeChild(style);
+    }, 1000);
+}
+
+// Export to Excel
+function exportToExcel() {
+    const table = document.querySelector('#schedule table');
+    if (!table) {
+        alert('No schedule table found to export.');
+        return;
+    }
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Schedule" });
+    XLSX.writeFile(wb, `PizzaHut_Schedule_${formatDate(state.currentWeekStart)}.xlsx`);
+}
+
+// Export to PDF
+function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.autoTable({
+        html: '#schedule table',
+        startY: 20,
+        theme: 'grid',
+        headStyles: { fillColor: [241, 90, 36] },
+    });
+
+    doc.text(`Pizza Hut Schedule - ${getWeekRangeText(state.currentWeekStart)}`, 14, 15);
+    doc.save(`PizzaHut_Schedule_${formatDate(state.currentWeekStart)}.pdf`);
+}
+
+// Export to JPG
+function exportToJPG() {
+    const scheduleElement = document.getElementById('schedule');
+    if (!scheduleElement) {
+        alert('No schedule found to export.');
+        return;
+    }
+
+    html2canvas(scheduleElement, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true
+    }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `PizzaHut_Schedule_${formatDate(state.currentWeekStart)}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+    }).catch(err => {
+        console.error('Error exporting to JPG:', err);
+        alert('An error occurred while exporting the schedule as a JPG image.');
+    });
+}
+
+// CSS styles are now defined at the top of the file

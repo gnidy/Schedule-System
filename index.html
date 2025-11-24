@@ -255,10 +255,17 @@
         
         .controls {
             display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
+            flex-direction: column;
+            gap: 15px;
             margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
         
         .btn-group {
@@ -319,12 +326,25 @@
         }
 
         .employee-actions {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            display: flex;
+            opacity: 1; /* Always visible on mobile */
+            position: static;
+            transform: none;
         }
 
-        tr:hover .employee-actions {
-            opacity: 1;
+        @media (min-width: 992px) {
+            .employee-actions {
+                opacity: 0;
+                transition: opacity 0.2s ease-in-out;
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            tr:hover .employee-actions {
+                opacity: 1;
+            }
         }
 
         .btn-edit:hover, .btn-delete:hover {
@@ -364,14 +384,24 @@
             .header h1 {
                 font-size: 1.8rem;
             }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
             
             .btn {
-                padding: 6px 12px;
-                font-size: 0.85rem;
+                padding: 10px 12px;
+                font-size: 0.9rem;
+                justify-content: center;
             }
             
             .btn i {
-                font-size: 1em;
+                font-size: 1.1em;
             }
             
             .date-navigation {
@@ -381,12 +411,21 @@
             }
             
             .table th {
-                font-size: 0.7rem;
+                font-size: 0.75rem;
                 padding: 8px 4px;
             }
             
             .table td {
                 padding: 8px 4px;
+                font-size: 0.85rem;
+            }
+
+            .employee-name {
+                font-weight: 600;
+            }
+
+            .employee-actions .btn {
+                padding: 4px 8px;
                 font-size: 0.8rem;
             }
         }
