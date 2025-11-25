@@ -14,90 +14,17 @@ const state = {
     },
     // Available shifts with their display names and colors
     shifts: {
-        '7--4': { name: 'Morning', color: '#e8f5e9', textColor: '#2e7d32' },
-        '8--5': { name: 'Day', color: '#e3f2fd', textColor: '#1565c0' },
-        '12--9': { name: 'Swing', color: '#fff3e0', textColor: '#e65100' },
-        '5--2': { name: 'Evening', color: '#f3e5f5', textColor: '#7b1fa2' },
-        '12--12': { name: 'Double', color: '#e8eaf6', textColor: '#303f9f' },
+        '7--4': { name: '7-4', color: '#e8f5e9', textColor: '#2e7d32' },
+        '8--5': { name: '8-5', color: '#e3f2fd', textColor: '#1565c0' },
+        '12--9': { name: '12-9', color: '#fff3e0', textColor: '#e65100' },
+        '5--2': { name: '5-2', color: '#f3e5f5', textColor: '#7b1fa2' },
+        '12--12': { name: '12-12', color: '#e8eaf6', textColor: '#303f9f' },
         'OFF': { name: 'OFF', color: '#ffebee', textColor: '#d32f2f' }
     },
     // Days of the week in order
     days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 };
 
-// Create and append styles
-const style = document.createElement('style');
-style.textContent = `
-    .off {
-        background-color: #fff3cd !important;
-        color: #856404;
-        font-weight: bold;
-    }
-    
-    .shift-7-4, .shift-8-5 {
-        background-color: #e8f5e9; /* Light green for morning shifts */
-    }
-    .shift-12-9 {
-        background-color: #fff3e0; /* Light orange for evening shifts */
-    }
-    .shift-5-2 {
-        background-color: #f3e5f5; /* Light purple for night shifts */
-    }
-    .shift-12-12 {
-        background-color: #ffebee; /* Light red for long shifts */
-    }
-    
-    .manager { 
-        border-left: 3px solid #f15a24;
-        font-weight: bold;
-    }
-    
-    .supervisor { 
-        border-left: 3px solid #ffc107;
-        font-weight: bold;
-    }
-    
-    table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-    
-    th, td {
-        border: 1px solid #dee2e6;
-        padding: 8px;
-        text-align: center;
-    }
-    
-    th {
-        background-color: #f8f9fa;
-        position: sticky;
-        top: 0;
-    }
-    
-    tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-    
-    tr:hover {
-        background-color: #e9ecef;
-    }
-    
-    @media print {
-        body * {
-            visibility: hidden;
-        }
-        #schedule, #schedule * {
-            visibility: visible;
-        }
-        #schedule {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-        }
-    }
-`;
-document.head.appendChild(style);
 
 // Initialize sample employees if none exist in localStorage
 function initializeSampleData() {
@@ -413,47 +340,32 @@ function renderSchedule() {
                 const shift = employee.shifts[dateInfo.day] || 'OFF';
                 const shiftInfo = state.shifts[shift] || {};
                 
-                // Set cell content and styling
-                cell.textContent = getShiftDisplay(shift);
-                cell.contentEditable = 'true';
-                cell.style.backgroundColor = shiftInfo.color || 'transparent';
-                cell.style.color = shiftInfo.textColor || 'inherit';
-                cell.style.borderRadius = '4px';
-                cell.style.padding = '8px 4px';
-                cell.style.transition = 'all 0.2s';
+                // Create an inner div for content and styling
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'shift-content';
+                contentDiv.textContent = getShiftDisplay(shift);
+                contentDiv.style.backgroundColor = shiftInfo.color || 'transparent';
+                contentDiv.style.color = shiftInfo.textColor || 'inherit';
+                contentDiv.style.borderRadius = '4px';
+                contentDiv.style.padding = '8px 4px';
+                contentDiv.style.transition = 'all 0.2s';
+                cell.appendChild(contentDiv);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'shift-actions position-absolute end-0 top-0 h-100 align-items-center pe-2';
+                actionsDiv.innerHTML = `
+                    <button class="btn btn-sm btn-outline-secondary btn-edit-shift" data-id="${employee.id}" data-day="${dateInfo.day}" title="Edit Shift">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info btn-swap-shift ms-1" data-id="${employee.id}" data-day="${dateInfo.day}" title="Swap Shift">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </button>
+                `;
+                cell.appendChild(actionsDiv);
                 
                 // Add data attributes for easy reference
                 cell.dataset.employeeId = employee.id;
                 cell.dataset.day = dateInfo.day;
-                
-                // Add event listeners for editing shifts
-                cell.addEventListener('click', (e) => {
-                    if (cell.contentEditable === 'true') {
-                        e.stopPropagation();
-                        cell.focus();
-                    }
-                });
-                
-                cell.addEventListener('focus', () => {
-                    cell.style.boxShadow = '0 0 0 2px rgba(241, 90, 36, 0.5)';
-                    cell.style.zIndex = '10';
-                    cell.style.position = 'relative';
-                });
-                
-                cell.addEventListener('blur', () => {
-                    const day = cell.dataset.day;
-                    const input = cell.textContent.trim();
-                    const newShift = parseShiftInput(input);
-                    
-                    if (newShift !== null) {
-                        employee.shifts[day] = newShift === 'OFF' ? undefined : newShift;
-                        updateCellAppearance(cell, newShift);
-                        saveToLocalStorage();
-                    } else {
-                        // Revert to previous value if invalid
-                        cell.textContent = getShiftDisplay(shift);
-                    }
-                });
             
             row.appendChild(cell);
         });
@@ -467,24 +379,77 @@ function renderSchedule() {
     scheduleContainer.innerHTML = ''; // Clear previous content
     scheduleContainer.appendChild(table);
 
-    // Add event listeners for edit and delete buttons
+    // Add event listeners for row clicks and button clicks
     tbody.addEventListener('click', (e) => {
+        const row = e.target.closest('tr');
+        if (!row) return;
+
         const editButton = e.target.closest('.btn-edit');
         const deleteButton = e.target.closest('.btn-delete');
+        const editShiftButton = e.target.closest('.btn-edit-shift');
+        const swapShiftButton = e.target.closest('.btn-swap-shift');
 
         if (editButton) {
+            e.stopPropagation(); // Prevent row click from firing
             const employeeId = parseInt(editButton.dataset.id, 10);
             showEditEmployeeModal(employeeId);
+            return;
         }
 
         if (deleteButton) {
+            e.stopPropagation(); // Prevent row click from firing
             const employeeId = parseInt(deleteButton.dataset.id, 10);
             deleteEmployee(employeeId);
+            return;
+        }
+
+        if (editShiftButton) {
+            e.stopPropagation();
+            const employeeId = parseInt(editShiftButton.dataset.id, 10);
+            const day = editShiftButton.dataset.day;
+            showEditShiftModal(employeeId, day);
+            return;
+        }
+
+        if (swapShiftButton) {
+            e.stopPropagation();
+            const employeeId = parseInt(swapShiftButton.dataset.id, 10);
+            const day = swapShiftButton.dataset.day;
+            showSwapShiftModal(employeeId, day);
+            return;
+        }
+
+        // Toggle actions visibility on row click
+        // If the click is on the name cell (and not on a button), toggle actions
+        const nameCell = e.target.closest('td:first-child');
+        const shiftCell = e.target.closest('.shift-cell');
+
+        if (nameCell && !editButton && !deleteButton) {
+            const clickedRow = nameCell.parentElement;
+            const isVisible = clickedRow.classList.contains('actions-visible');
+
+            // Hide actions on all rows and cells
+            tbody.querySelectorAll('tr').forEach(r => r.classList.remove('actions-visible'));
+            tbody.querySelectorAll('.shift-cell').forEach(c => c.classList.remove('actions-visible'));
+
+            // If it wasn't already visible, show it
+            if (!isVisible) {
+                clickedRow.classList.add('actions-visible');
+            }
+        } else if (shiftCell && !editShiftButton && !swapShiftButton) {
+            const isVisible = shiftCell.classList.contains('actions-visible');
+
+            // Hide actions on all rows and cells
+            tbody.querySelectorAll('tr').forEach(r => r.classList.remove('actions-visible'));
+            tbody.querySelectorAll('.shift-cell').forEach(c => c.classList.remove('actions-visible'));
+
+            if (!isVisible) {
+                shiftCell.classList.add('actions-visible');
+            }
         }
     });
     }
 }
-
 
 // Update cell appearance
 function updateCellAppearance(cell, shift) {
@@ -586,6 +551,16 @@ function goToCurrentWeek() {
 }
 
 function setupEventListeners() {
+    // Add a document-level click listener to hide actions when clicking outside
+    document.addEventListener('click', (e) => {
+        // If the click is not on an actionable cell, hide all actions
+        if (!e.target.closest('td:first-child') && !e.target.closest('.shift-cell')) {
+            document.querySelectorAll('#schedule tr.actions-visible, #schedule .shift-cell.actions-visible').forEach(el => {
+                el.classList.remove('actions-visible');
+            });
+        }
+    });
+
     console.log('Setting up event listeners...');
 
     // Helper to safely add event listeners
@@ -718,31 +693,9 @@ function deleteEmployee(employeeId) {
 
 // Generate schedule automatically
 function generateSchedule() {
-    if (!confirm('This will update shifts for all team members. Continue?')) {
-        return;
-    }
-    
-    // Simple scheduling algorithm
-    state.employees.forEach((employee, index) => {
-        // Skip if manager or supervisor (they have fixed schedules)
-        if (['Manager', 'Supervisor'].includes(employee.role)) {
-            return;
-        }
-        
-        // For team members, assign shifts based on their position in the array
-        const shiftPatterns = ['8--5', '12--9', '5--2', '7--4'];
-        const shiftIndex = index % shiftPatterns.length;
-        const shift = shiftPatterns[shiftIndex];
-        
-        // Update shifts for each day
-        state.days.forEach(day => {
-            employee.shifts[day] = shift;
-        });
-    });
-    
-    saveToLocalStorage();
-    renderSchedule();
-    alert('Schedule generated successfully!');
+    alert('The automatic schedule generation feature is currently disabled. You can add your own algorithm here.');
+    // The original algorithm has been removed as requested.
+    // You can implement your custom scheduling logic within this function.
 }
 
 // Print the schedule
@@ -820,9 +773,15 @@ function exportToJPG() {
         return;
     }
 
+    // Add export class to body
+    document.body.classList.add('export-mode');
+
+    window.scrollTo(0, 0);
+
     html2canvas(scheduleElement, {
         scale: 2, // Higher scale for better quality
-        useCORS: true
+        useCORS: true,
+        windowWidth: 1400 // Set a virtual width for rendering
     }).then(canvas => {
         const link = document.createElement('a');
         link.download = `PizzaHut_Schedule_${formatDate(state.currentWeekStart)}.jpg`;
@@ -831,7 +790,28 @@ function exportToJPG() {
     }).catch(err => {
         console.error('Error exporting to JPG:', err);
         alert('An error occurred while exporting the schedule as a JPG image.');
+    }).finally(() => {
+        // Always remove the export class
+        document.body.classList.remove('export-mode');
     });
+}
+
+function showEditShiftModal(employeeId, day) {
+    const employee = state.employees.find(emp => emp.id === employeeId);
+    if (!employee) return;
+
+    const currentShift = employee.shifts[day] || 'OFF';
+    const newShift = prompt(`Enter new shift for ${employee.name} on ${day} (current: ${getShiftDisplay(currentShift)}):`, getShiftDisplay(currentShift));
+
+    if (newShift !== null) {
+        employee.shifts[day] = parseShiftInput(newShift);
+        saveToLocalStorage();
+        renderSchedule();
+    }
+}
+
+function showSwapShiftModal(employeeId, day) {
+    alert('Shift swapping functionality is not yet implemented.');
 }
 
 // CSS styles are now defined at the top of the file
