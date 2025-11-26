@@ -357,9 +357,6 @@ function renderSchedule() {
                     <button class="btn btn-sm btn-outline-secondary btn-edit-shift" data-id="${employee.id}" data-day="${dateInfo.day}" title="Edit Shift">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-info btn-swap-shift ms-1" data-id="${employee.id}" data-day="${dateInfo.day}" title="Swap Shift">
-                        <i class="bi bi-arrow-left-right"></i>
-                    </button>
                 `;
                 cell.appendChild(actionsDiv);
                 
@@ -387,7 +384,6 @@ function renderSchedule() {
         const editButton = e.target.closest('.btn-edit');
         const deleteButton = e.target.closest('.btn-delete');
         const editShiftButton = e.target.closest('.btn-edit-shift');
-        const swapShiftButton = e.target.closest('.btn-swap-shift');
 
         if (editButton) {
             e.stopPropagation(); // Prevent row click from firing
@@ -411,14 +407,6 @@ function renderSchedule() {
             return;
         }
 
-        if (swapShiftButton) {
-            e.stopPropagation();
-            const employeeId = parseInt(swapShiftButton.dataset.id, 10);
-            const day = swapShiftButton.dataset.day;
-            showSwapShiftModal(employeeId, day);
-            return;
-        }
-
         // Toggle actions visibility on row click
         // If the click is on the name cell (and not on a button), toggle actions
         const nameCell = e.target.closest('td:first-child');
@@ -436,7 +424,7 @@ function renderSchedule() {
             if (!isVisible) {
                 clickedRow.classList.add('actions-visible');
             }
-        } else if (shiftCell && !editShiftButton && !swapShiftButton) {
+        } else if (shiftCell && !editShiftButton) {
             const isVisible = shiftCell.classList.contains('actions-visible');
 
             // Hide actions on all rows and cells
@@ -693,9 +681,45 @@ function deleteEmployee(employeeId) {
 
 // Generate schedule automatically
 function generateSchedule() {
-    alert('The automatic schedule generation feature is currently disabled. You can add your own algorithm here.');
-    // The original algorithm has been removed as requested.
-    // You can implement your custom scheduling logic within this function.
+    if (!confirm('This will overwrite the current schedule. Are you sure?')) {
+        return;
+    }
+
+    const shifts = Object.keys(state.shifts).filter(shift => shift !== 'OFF');
+    const days = state.days; // Already an array of day names
+    
+    state.employees.forEach(employee => {
+        // Reset all days to working days first
+        days.forEach(day => {
+            employee.shifts[day] = '8--5'; // Default shift
+        });
+
+        // Assign one random day off
+        const offDay = days[Math.floor(Math.random() * days.length)];
+        employee.shifts[offDay] = 'OFF';
+
+        // Assign shifts to working days
+        const workingDays = days.filter(day => day !== offDay);
+        workingDays.forEach((day, index) => {
+            // Distribute shifts evenly
+            const shiftIndex = index % shifts.length;
+            employee.shifts[day] = shifts[shiftIndex];
+        });
+    });
+
+    // Ensure coverage - make sure at least one employee is working each shift each day
+    days.forEach(day => {
+        const workingEmployees = state.employees.filter(emp => emp.shifts[day] !== 'OFF');
+        if (workingEmployees.length === 0) {
+            // If no one is working on this day, assign someone
+            const randomEmployee = state.employees[Math.floor(Math.random() * state.employees.length)];
+            randomEmployee.shifts[day] = '8--5'; // Assign default shift
+        }
+    });
+
+    saveToLocalStorage();
+    renderSchedule();
+    alert('New schedule has been generated!');
 }
 
 // Print the schedule
@@ -804,14 +828,224 @@ function showEditShiftModal(employeeId, day) {
     const newShift = prompt(`Enter new shift for ${employee.name} on ${day} (current: ${getShiftDisplay(currentShift)}):`, getShiftDisplay(currentShift));
 
     if (newShift !== null) {
-        employee.shifts[day] = parseShiftInput(newShift);
+        const parsedShift = parseShiftInput(newShift);
+        
+        // Count current off days
+        const currentOffDays = Object.values(employee.shifts).filter(shift => shift === 'OFF').length;
+        const isChangingToOff = parsedShift === 'OFF';
+        const isCurrentDayOff = currentShift === 'OFF';
+        
+        // If trying to set a new day off when already having one off day (and not replacing an existing off day)
+        if (isChangingToOff && currentOffDays >= 1 && !isCurrentDayOff) {
+            alert('Each employee can only have one day off per week. Please modify the existing off day first.');
+            return;
+        }
+        
+        // If changing from off day to working day, or within the one-off-day limit
+        employee.shifts[day] = parsedShift;
         saveToLocalStorage();
         renderSchedule();
     }
 }
 
-function showSwapShiftModal(employeeId, day) {
-    alert('Shift swapping functionality is not yet implemented.');
-}
+// Add drag and drop functionality
+function setupDragAndDrop() {
+    let draggedCell = null;
+    let draggedShift = null;
+    let draggedEmployeeId = null;
+    let isDragging = false;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const TOUCH_MOVE_THRESHOLD = 10; // Minimum pixels to move before considering it a drag
+
+    function startDrag(cell, x, y) {
+        if (!cell || cell.classList.contains('table-secondary') || !cell.textContent.trim() || isDragging) return false;
+        
+        isDragging = true;
+        draggedCell = cell;
+        draggedEmployeeId = cell.getAttribute('data-employee-id');
+        draggedShift = cell.textContent.trim();
+        touchStartX = x;
+        touchStartY = y;
+        
+        // Add dragging class for visual feedback
+        cell.classList.add('dragging');
+        document.body.classList.add('dragging-active');
+        
+        return true;
+    }
+
+    function handleDragMove(x, y) {
+        if (!isDragging) return;
+        
+        // For touch events, we need to get the element at the touch point
+        const touchPoint = document.elementFromPoint(x, y);
+        const targetCell = touchPoint ? touchPoint.closest('td[data-employee-id][data-day]') : null;
+        
+        if (!targetCell || targetCell === draggedCell) {
+            // Remove hover effect from all cells if not over a valid target
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            return;
+        }
+        
+        // Remove hover effect from all cells first
+        document.querySelectorAll('.drag-over').forEach(el => {
+            if (el !== targetCell) el.classList.remove('drag-over');
+        });
+        
+        // Add hover effect to current target
+        targetCell.classList.add('drag-over');
+    }
+
+    function handleDragEnd(e, isTouch = false) {
+        if (!isDragging) return;
+        
+        // Clean up
+        document.querySelectorAll('.drag-over, .dragging').forEach(el => {
+            el.classList.remove('drag-over', 'dragging');
+        });
+        document.body.classList.remove('dragging-active');
+        
+        // For touch events, we need to get the element at the touch point
+        const endX = isTouch ? e.changedTouches[0].clientX : e.clientX;
+        const endY = isTouch ? e.changedTouches[0].clientY : e.clientY;
+        const touchPoint = document.elementFromPoint(endX, endY);
+        const targetCell = touchPoint ? touchPoint.closest('td[data-employee-id][data-day]') : null;
+        
+        if (!targetCell || targetCell === draggedCell) {
+            resetDragState();
+            return;
+        }
+        
+        const targetEmployeeId = targetCell.getAttribute('data-employee-id');
+        const targetDay = targetCell.getAttribute('data-day');
+        const sourceDay = draggedCell.getAttribute('data-day');
+        
+        // Get the employees
+        const sourceEmployee = state.employees.find(emp => emp.id === parseInt(draggedEmployeeId));
+        const targetEmployee = state.employees.find(emp => emp.id === parseInt(targetEmployeeId));
+        
+        if (!sourceEmployee || !targetEmployee) {
+            resetDragState();
+            return;
+        }
+        
+        // Get the shifts
+        const sourceShift = sourceEmployee.shifts[sourceDay];
+        const targetShift = targetEmployee.shifts[targetDay];
+        
+        // Validate the move
+        if (!validateShiftMove(sourceEmployee, targetEmployee, sourceShift, targetShift, sourceDay, targetDay)) {
+            resetDragState();
+            return;
+        }
+        
+        // Perform the swap
+        sourceEmployee.shifts[sourceDay] = targetShift;
+        targetEmployee.shifts[targetDay] = sourceShift;
+        
+        // Update timestamps
+        const now = new Date().toISOString();
+        sourceEmployee.updatedAt = now;
+        targetEmployee.updatedAt = now;
+        
+        // Save and refresh
+        saveToLocalStorage();
+        renderSchedule();
+        
+        resetDragState();
+    }
+    
+    function resetDragState() {
+        isDragging = false;
+        draggedCell = null;
+        draggedEmployeeId = null;
+        draggedShift = null;
+        document.body.style.cursor = '';
+    }
+
+    // Mouse events
+    document.addEventListener('mousedown', (e) => {
+        const cell = e.target.closest('td[data-employee-id][data-day]');
+        if (startDrag(cell, e.clientX, e.clientY)) {
+            e.preventDefault();
+        }
+    });
+
+    // Touch events
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const cell = document.elementFromPoint(touch.clientX, touch.clientY).closest('td[data-employee-id][data-day]');
+        if (startDrag(cell, touch.clientX, touch.clientY)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('mousemove', (e) => {
+        handleDragMove(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault(); // Prevent scrolling while dragging
+        const touch = e.touches[0];
+        handleDragMove(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    document.addEventListener('mouseup', (e) => {
+        handleDragEnd(e, false);
+    });
+
+    document.addEventListener('touchend', (e) => {
+        handleDragEnd(e, true);
+    });
+
+    // Handle touch cancel
+    document.addEventListener('touchcancel', () => {
+        if (isDragging) {
+            resetDragState();
+            document.querySelectorAll('.drag-over, .dragging').forEach(el => {
+                el.classList.remove('drag-over', 'dragging');
+            });
+            document.body.classList.remove('dragging-active');
+        }
+    });
+
+    // Reset drag state
+    function resetDragState() {
+        isDragging = false;
+        draggedCell = null;
+        draggedEmployeeId = null;
+        draggedShift = null;
+        document.body.style.cursor = '';
+    }
+
+    // Validate if the shift move is allowed
+    function validateShiftMove(sourceEmployee, targetEmployee, sourceShift, targetShift, sourceDay, targetDay) {
+        // All moves are allowed - no restrictions on number of OFF days
+        return true;
+    }
+        return true;
+    }
+
+    // Show temporary message to user
+    function showTemporaryMessage(message) {
+        const msg = document.createElement('div');
+        msg.className = 'temp-message';
+        msg.textContent = message;
+        document.body.appendChild(msg);
+        setTimeout(() => {
+            msg.classList.add('show');
+            setTimeout(() => {
+                msg.classList.remove('show');
+                setTimeout(() => document.body.removeChild(msg), 300);
+            }, 2000);
+        }, 10);
+    }
+
+// Initialize drag and drop when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setupDragAndDrop();
+});
 
 // CSS styles are now defined at the top of the file

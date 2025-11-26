@@ -52,6 +52,68 @@ tr:hover {
     background-color: #e9ecef;
 }
 
+/* Drag and Drop Styles */
+.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    transition: transform 0.2s, opacity 0.2s;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.drag-over {
+    position: relative;
+    z-index: 10;
+    background-color: rgba(241, 90, 36, 0.1) !important;
+    border: 2px dashed #f15a24 !important;
+    transition: background-color 0.2s;
+}
+
+body.dragging-active {
+    cursor: grabbing;
+    user-select: none;
+}
+
+.temp-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 2000;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.temp-message.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Make table cells more interactive */
+td[data-employee-id][data-day] {
+    cursor: grab;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+td[data-employee-id][data-day]:active {
+    cursor: grabbing;
+}
+
+/* Improve table row hover effect */
+tbody tr:hover td:not(.table-secondary) {
+    background-color: rgba(241, 90, 36, 0.05) !important;
+}
+
+/* Ensure the schedule table is properly sized */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 @media print {
     body * {
         visibility: hidden;
