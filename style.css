@@ -233,23 +233,166 @@ body {
 
 .card {
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
 }
 
 .card-header {
-    background-color: white;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
     font-weight: 600;
-    padding: 15px 20px;
-    border-radius: 10px 10px 0 0 !important;
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-header i {
+    font-size: 1.2em;
+    color: #6c757d;
+}
+
+/* Quick Guide specific styles */
+#quickGuideCollapse .card-body {
+    padding: 20px;
+}
+
+.guide-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.guide-section:last-child {
+    margin-bottom: 0;
+}
+
+.guide-section h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f3f5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guide-section h5 i {
+    font-size: 1.1em;
+    color: #6c757d;
+}
+
+.guide-section ul {
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.guide-section li {
+    padding: 8px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-bottom: 1px dashed #f1f3f5;
+}
+
+.guide-section li:last-child {
+    border-bottom: none;
+}
+
+.guide-section li i {
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.legend-item {
+    background: #f8f9fa;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.legend-item:hover {
+    background: #f1f3f5;
+    transform: translateX(3px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card {
+        border-radius: 10px;
+        margin-left: -10px;
+        margin-right: -10px;
+        width: calc(100% + 20px);
+    }
+    
+    .guide-section {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .guide-section h5 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+    
+    .guide-section li {
+        padding: 10px 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .guide-section li i {
+        margin-top: 4px;
+        font-size: 1.1em;
+    }
+    
+    .legend-item {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+    
+    .legend-color {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+    }
+    
+    /* Make the guide collapsible more touch-friendly */
+    .card-header[data-bs-toggle="collapse"] {
+        cursor: pointer;
+        user-select: none;
+        padding: 14px 16px;
+    }
+    
+    .card-header[data-bs-toggle="collapse"]::after {
+        content: '\f078';
+        font-family: 'bootstrap-icons';
+        float: right;
+        transition: transform 0.2s;
+    }
+    
+    .card-header[data-bs-toggle="collapse"].collapsed::after {
+        transform: rotate(-90deg);
+    }
 }
 
 .table {
@@ -595,6 +738,73 @@ tr.actions-visible .employee-actions {
 body.export-mode .container {
     max-width: 1400px !important;
     padding: 25px !important;
+}
+
+/* Temporary message styles */
+.temp-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateX(120%);
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    max-width: 350px;
+    opacity: 0;
+}
+
+.temp-message.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.temp-message i {
+    font-size: 1.2em;
+}
+
+.temp-message-success {
+    background-color: #198754;
+    border-left: 4px solid #0f5132;
+}
+
+.temp-message-error {
+    background-color: #dc3545;
+    border-left: 4px solid #842029;
+}
+
+.temp-message-info {
+    background-color: #0d6efd;
+    border-left: 4px solid #084298;
+}
+
+/* Animation for message appearance */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
 body.export-mode .table th,

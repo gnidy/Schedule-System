@@ -337,7 +337,9 @@ function renderSchedule() {
                 const cell = document.createElement('td');
                 cell.className = 'shift-cell text-center';
                 
-                const shift = employee.shifts[dateInfo.day] || 'OFF';
+                // Ensure we're using the correct day name format (capitalized)
+                const dayName = dateInfo.day.charAt(0).toUpperCase() + dateInfo.day.slice(1).toLowerCase();
+                const shift = employee.shifts[dayName] || 'OFF';
                 const shiftInfo = state.shifts[shift] || {};
                 
                 // Create an inner div for content and styling
@@ -595,33 +597,52 @@ function showAddEmployeeModal() {
         return;
     }
 
-    const employeeModal = new bootstrap.Modal(modalElement);
+    // Initialize the modal if not already done
+    let employeeModal = bootstrap.Modal.getInstance(modalElement);
+    if (!employeeModal) {
+        employeeModal = new bootstrap.Modal(modalElement);
+    }
 
     // Clear previous input
     document.getElementById('employeeName').value = '';
     document.getElementById('employeeRole').selectedIndex = 0;
 
-    // Setup save button listener
+    // Remove any existing click handlers from the save button
     const saveButton = document.getElementById('saveEmployee');
-    
-    // Clone and replace the button to remove old listeners
     const newSaveButton = saveButton.cloneNode(true);
     saveButton.parentNode.replaceChild(newSaveButton, saveButton);
 
-    newSaveButton.addEventListener('click', () => {
+    // Add new click handler
+    newSaveButton.onclick = function() {
         const name = document.getElementById('employeeName').value.trim();
         const role = document.getElementById('employeeRole').value;
 
         if (name) {
-            createEmployee(name, role);
-            employeeModal.hide();
+            const newEmployee = createEmployee(name, role);
+            console.log('New employee created:', newEmployee);
+            renderSchedule();
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Show success message
+            showTemporaryMessage(`Employee ${name} added successfully!`);
         } else {
             alert('Please enter a name for the employee.');
             document.getElementById('employeeName').focus();
         }
-    });
+    };
 
+    // Show the modal
     employeeModal.show();
+    
+    // Focus the name field when modal is shown
+    modalElement.addEventListener('shown.bs.modal', function() {
+        document.getElementById('employeeName').focus();
+    });
 }
 
 
@@ -1028,19 +1049,49 @@ function setupDragAndDrop() {
         return true;
     }
 
-    // Show temporary message to user
-    function showTemporaryMessage(message) {
+    // Show temporary message to user with optional type (success, error, info)
+    function showTemporaryMessage(message, type = 'info') {
+        // Log the message with timestamp and type
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+        
+        // Create message element
         const msg = document.createElement('div');
-        msg.className = 'temp-message';
-        msg.textContent = message;
+        msg.className = `temp-message temp-message-${type}`;
+        
+        // Add icon based on message type
+        let icon = '';
+        switch(type) {
+            case 'success':
+                icon = '<i class="bi bi-check-circle-fill"></i> ';
+                break;
+            case 'error':
+                icon = '<i class="bi bi-exclamation-triangle-fill"></i> ';
+                break;
+            case 'info':
+            default:
+                icon = '<i class="bi bi-info-circle-fill"></i> ';
+        }
+        
+        msg.innerHTML = `${icon}${message}`;
+        
+        // Add to DOM and animate in
         document.body.appendChild(msg);
         setTimeout(() => {
             msg.classList.add('show');
             setTimeout(() => {
                 msg.classList.remove('show');
-                setTimeout(() => document.body.removeChild(msg), 300);
-            }, 2000);
+                setTimeout(() => {
+                    if (msg.parentNode) {
+                        document.body.removeChild(msg);
+                    }
+                }, 300);
+            }, 3000); // Show for 3 seconds
         }, 10);
+        
+        // Log to console with styling
+        const style = `color: ${type === 'success' ? '#198754' : type === 'error' ? '#dc3545' : '#0d6efd'}; font-weight: bold`;
+        console.log(`%c${type.toUpperCase()}: ${message}`, style);
     }
 
 // Initialize drag and drop when DOM is loaded

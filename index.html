@@ -69,48 +69,91 @@
         </div>
         
         <div class="card mt-4">
-            <div class="card-header">
-                <i class="bi bi-info-circle"></i> Quick Guide
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div><i class="bi bi-info-circle"></i> Quick Guide</div>
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#quickGuideCollapse" aria-expanded="false" aria-controls="quickGuideCollapse">
+                    <i class="bi bi-chevron-down"></i>
+                </button>
             </div>
-            <div class="card-body">
-                <div class="row">
+            <div class="card-body collapse" id="quickGuideCollapse">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <h5><i class="bi bi-mouse"></i> How to Use</h5>
-                        <ul class="list-unstyled">
-                            <li><i class="bi bi-check-circle text-success"></i> <strong>Click</strong> any cell to edit shift</li>
-                            <li><i class="bi bi-arrow-repeat text-primary"></i> Type shift (e.g., 8-5, 12-9) or 'OFF'</li>
-                            <li><i class="bi bi-arrow-left-right"></i> Navigate between weeks using arrows</li>
-                            <li><i class="bi bi-calendar-check"></i> Click 'Today' to return to current week</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5><i class="bi bi-palette"></i> Shift Legend</h5>
-                        <div class="legend">
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e3f2fd;"></span>
-                                <span>8-5 (Morning)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #fff3e0;"></span>
-                                <span>12-9 (Mid)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e8f5e9;"></span>
-                                <span>7-4 (Evening)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #f3e5f5;"></span>
-                                <span>5-2 (Late)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #e8eaf6;"></span>
-                                <span>12-12 (Long)</span>
-                            </div>
-                            <div class="legend-item">
-                                <span class="legend-color" style="background-color: #ffebee;"></span>
-                                <span>OFF</span>
+                        <div class="guide-section">
+                            <h5><i class="bi bi-palette"></i> Shift Legend</h5>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #e3f2fd;"></span>
+                                        <span>8-5 (Morning)</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #fff3e0;"></span>
+                                        <span>12-9 (Mid)</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #e8f5e9;"></span>
+                                        <span>7-4 (Evening)</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #f3e5f5;"></span>
+                                        <span>5-2 (Late)</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #e8eaf6;"></span>
+                                        <span>12-12 (Long)</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="legend-item p-2 rounded">
+                                        <span class="legend-color" style="background-color: #ffebee;"></span>
+                                        <span>OFF</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <div class="guide-section mt-4">
+                            <h5><i class="bi bi-download"></i> Export Options</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-image"></i> JPG</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-pdf"></i> PDF</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-file-earmark-excel"></i> Excel</span>
+                                <span class="badge bg-light text-dark"><i class="bi bi-printer"></i> Print</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="guide-section">
+                            <h5><i class="bi bi-mouse"></i> How to Use</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    <strong>Edit Shifts:</strong> Click any cell to edit shift times (e.g., 8-5, 12-9) or type 'OFF' for day off
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-people text-primary me-2"></i>
+                                    <strong>Add Employee:</strong> Click 'Add Employee' to add new team members with roles and availability
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-magic text-info me-2"></i>
+                                    <strong>Auto-Generate:</strong> Let the system create an optimized schedule based on employee availability
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-arrow-left-right text-secondary me-2"></i>
+                                    <strong>Navigation:</strong> Use arrow buttons to move between weeks or click 'Today' to return to current week
+                                </li>
+                            </ul>
+                        </div>
+                        
                     </div>
                 </div>
             </div>
