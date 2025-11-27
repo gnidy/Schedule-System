@@ -877,23 +877,58 @@ function setupDragAndDrop() {
     let isDragging = false;
     let touchStartX = 0;
     let touchStartY = 0;
+    let touchStartTime = 0;
+    let touchTimer = null;
+    const LONG_PRESS_DURATION = 300; // ms to wait before considering it a long press
     const TOUCH_MOVE_THRESHOLD = 10; // Minimum pixels to move before considering it a drag
 
-    function startDrag(cell, x, y) {
-        if (!cell || cell.classList.contains('table-secondary') || !cell.textContent.trim() || isDragging) return false;
-        
-        isDragging = true;
-        draggedCell = cell;
-        draggedEmployeeId = cell.getAttribute('data-employee-id');
-        draggedShift = cell.textContent.trim();
-        touchStartX = x;
-        touchStartY = y;
-        
-        // Add dragging class for visual feedback
-        cell.classList.add('dragging');
-        document.body.classList.add('dragging-active');
-        
-        return true;
+    function startDrag(cell, x, y, isTouch = false) {
+        if (!cell || cell.classList.contains('table-secondary') || !cell.textContent.trim() || isDragging) {
+            return false;
+        }
+
+        // For touch events, we'll use a timer to determine if it's a long press
+        if (isTouch) {
+            touchStartTime = Date.now();
+            touchStartX = x;
+            touchStartY = y;
+            touchTimer = setTimeout(() => {
+                // This is a long press - start drag
+                isDragging = true;
+                draggedCell = cell;
+                draggedEmployeeId = cell.getAttribute('data-employee-id');
+                draggedShift = cell.textContent.trim();
+                
+                // Add dragging class for visual feedback
+                cell.classList.add('dragging');
+                document.body.classList.add('dragging-active');
+                
+                // Prevent text selection
+                document.body.style.webkitUserSelect = 'none';
+                document.body.style.userSelect = 'none';
+            }, LONG_PRESS_DURATION);
+            return false;
+        } else {
+            // For mouse events, start drag immediately
+            isDragging = true;
+            draggedCell = cell;
+            draggedEmployeeId = cell.getAttribute('data-employee-id');
+            draggedShift = cell.textContent.trim();
+            
+            // Add dragging class for visual feedback
+            cell.classList.add('dragging');
+            document.body.classList.add('dragging-active');
+            
+            return true;
+        }
+    }
+
+    function cancelDrag() {
+        if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+        resetDragState();
     }
 
     function handleDragMove(x, y) {
@@ -996,35 +1031,69 @@ function setupDragAndDrop() {
     // Touch events
     document.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
-        const cell = document.elementFromPoint(touch.clientX, touch.clientY).closest('td[data-employee-id][data-day]');
-        if (startDrag(cell, touch.clientX, touch.clientY)) {
-            e.preventDefault();
+        const cell = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('td[data-employee-id][data-day]');
+        if (cell && !cell.classList.contains('table-secondary') && cell.textContent.trim()) {
+            startDrag(cell, touch.clientX, touch.clientY, true);
         }
-    }, { passive: false });
+    }, { passive: true });
 
+    // Mouse move handler
     document.addEventListener('mousemove', (e) => {
         handleDragMove(e.clientX, e.clientY);
     });
 
+    // Touch move handler
     document.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault(); // Prevent scrolling while dragging
-        const touch = e.touches[0];
-        handleDragMove(touch.clientX, touch.clientY);
+        if (!isDragging && touchTimer) {
+            const touch = e.touches[0];
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
+            
+            if (Math.sqrt(dx * dx + dy * dy) > TOUCH_MOVE_THRESHOLD) {
+                // Moved too much, cancel the long press
+                cancelDrag();
+            }
+        } else if (isDragging) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleDragMove(touch.clientX, touch.clientY);
+        }
     }, { passive: false });
 
+    // Mouse up handler
     document.addEventListener('mouseup', (e) => {
         handleDragEnd(e, false);
     });
 
+    // Touch end handler
     document.addEventListener('touchend', (e) => {
-        handleDragEnd(e, true);
-    });
+        const wasDragging = isDragging;
+        
+        // If we were dragging, handle the drag end
+        if (wasDragging) {
+            handleDragEnd(e, true);
+        } 
+        // If we have a timer running and it hasn't been long enough for a long press
+        else if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+            
+            // This was a tap - handle as a click for editing
+            const touch = e.changedTouches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('td[data-employee-id][data-day]');
+            
+            if (cell && !cell.classList.contains('table-secondary') && cell.textContent.trim()) {
+                const employeeId = cell.getAttribute('data-employee-id');
+                const day = cell.getAttribute('data-day');
+                showEditShiftModal(employeeId, day);
+            }
+        }
+    }, { passive: true });
 
     // Handle touch cancel
     document.addEventListener('touchcancel', () => {
-        if (isDragging) {
-            resetDragState();
+        if (isDragging || touchTimer) {
+            cancelDrag();
             document.querySelectorAll('.drag-over, .dragging').forEach(el => {
                 el.classList.remove('drag-over', 'dragging');
             });
@@ -1038,7 +1107,10 @@ function setupDragAndDrop() {
         draggedCell = null;
         draggedEmployeeId = null;
         draggedShift = null;
+        touchTimer = null;
         document.body.style.cursor = '';
+        document.body.style.webkitUserSelect = '';
+        document.body.style.userSelect = '';
     }
 
     // Validate if the shift move is allowed
