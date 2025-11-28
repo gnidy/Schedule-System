@@ -21,8 +21,8 @@ const state = {
         '12--12': { name: '12-12', color: '#e8eaf6', textColor: '#303f9f' },
         'OFF': { name: 'OFF', color: '#ffebee', textColor: '#d32f2f' }
     },
-    // Days of the week in order
-    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    // Days of the week starting with Friday
+    days: ['Friday', 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
 };
 
 
@@ -82,29 +82,42 @@ function createEmployee(name, role, shifts = {}) {
     return employee;
 }
 
-// Get the current week's start date (Sunday)
+// Get the current week's start date (Friday)
 function getWeekStartDate(date = new Date()) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day; // 0 for Sunday, 1 for Monday, etc.
+    // Calculate days to previous Friday (5 is Friday, 0 is Sunday)
+    // If today is Sunday (0), go back 2 days to get to Friday
+    // Otherwise, go back (day + 2) % 7 days to get to the most recent Friday
+    const daysToFriday = (day + 2) % 7;
+    const diff = d.getDate() - daysToFriday;
     return new Date(d.setDate(diff));
 }
 
-// Generate dates for the current week
+// Generate dates for the current week starting with Friday
 function getWeekDates(startDate) {
     const dates = [];
+    const today = new Date();
     const currentDate = new Date(startDate);
     
+    // Find the most recent Friday
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+    const daysToFriday = (dayOfWeek + 2) % 7; // Calculate days to subtract to get to Friday
+    const friday = new Date(today);
+    friday.setDate(today.getDate() - daysToFriday);
+    
+    // Generate dates from Friday to Thursday
     for (let i = 0; i < 7; i++) {
-        const date = new Date(currentDate);
-        date.setDate(currentDate.getDate() + i);
+        const date = new Date(friday);
+        date.setDate(friday.getDate() + i);
         
         dates.push({
             date: date.getDate(),
-            day: state.days[date.getDay()],
+            day: state.days[i],
             month: date.getMonth() + 1,
             year: date.getFullYear(),
-            fullDate: new Date(date)
+            fullDate: new Date(date),
+            isToday: date.toDateString() === today.toDateString()
         });
     }
     
@@ -215,8 +228,6 @@ function updateWeekDisplay() {
     const weekStart = state.currentWeekStart;
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    
-    document.getElementById('currentWeek').textContent = getWeekRangeText(weekStart);
     
     // Highlight today's date
     const today = new Date();
@@ -526,19 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Application initialized successfully.');
 });
 
-function navigateWeek(days) {
-    state.currentWeekStart.setDate(state.currentWeekStart.getDate() + days);
-    updateWeekDisplay();
-    renderSchedule();
-    saveToLocalStorage();
-}
-
-function goToCurrentWeek() {
-    state.currentWeekStart = getWeekStartDate(new Date());
-    updateWeekDisplay();
-    renderSchedule();
-    saveToLocalStorage();
-}
+// Date navigation functions removed as per requirements
 
 function setupEventListeners() {
     // Add a document-level click listener to hide actions when clicking outside
@@ -558,27 +557,23 @@ function setupEventListeners() {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener(event, handler);
-        } else {
-            console.error(`Element with ID '${id}' not found.`);
+        } else if (id !== 'prevWeek' && id !== 'nextWeek' && id !== 'currentWeek' && id !== 'todayBtn') {
+            // Only log error for non-date navigation elements
+            console.log(`Element with ID '${id}' not found.`);
         }
     };
 
     // Main controls
     addListener('addEmployee', 'click', showAddEmployeeModal);
-    addListener('generateSchedule', 'click', generateSchedule);
+    addListener('generateSchedule', 'click', confirmGenerateSchedule);
     addListener('printSchedule', 'click', printSchedule);
     addListener('exportExcel', 'click', exportToExcel);
     addListener('exportPDF', 'click', exportToPDF);
-   addListener('exportJPG', 'click', exportToJPG);
-
-    // Week navigation
-    addListener('prevWeek', 'click', () => navigateWeek(-7));
-    addListener('nextWeek', 'click', () => navigateWeek(7));
-    addListener('currentWeek', 'click', goToCurrentWeek);
-    addListener('todayBtn', 'click', goToCurrentWeek);
+    addListener('exportJPG', 'click', exportToJPG);
+    addListener('confirmGenerateBtn', 'click', generateSchedule);
 
     // Other UI controls
-        addListener('showOnlyWorking', 'change', (e) => {
+    addListener('showOnlyWorking', 'change', (e) => {
         state.showOnlyWorking = e.target.checked;
         renderSchedule();
         saveToLocalStorage();
@@ -631,7 +626,7 @@ function showAddEmployeeModal() {
             // Show success message
             showTemporaryMessage(`Employee ${name} added successfully!`);
         } else {
-            alert('Please enter a name for the employee.');
+            showTemporaryMessage('Please enter a name for the employee.', 'warning');
             document.getElementById('employeeName').focus();
         }
     };
@@ -678,7 +673,7 @@ function showEditEmployeeModal(employeeId) {
             renderSchedule();
             employeeModal.hide();
         } else {
-            alert('Employee name cannot be empty.');
+            showTemporaryMessage('Employee name cannot be empty.', 'warning');
         }
     });
 
@@ -701,11 +696,12 @@ function deleteEmployee(employeeId) {
 }
 
 // Generate schedule automatically
-function generateSchedule() {
-    if (!confirm('This will overwrite the current schedule. Are you sure?')) {
-        return;
-    }
+function confirmGenerateSchedule() {
+    const modal = new bootstrap.Modal(document.getElementById('confirmGenerateModal'));
+    modal.show();
+}
 
+function generateSchedule() {
     const shifts = Object.keys(state.shifts).filter(shift => shift !== 'OFF');
     const days = state.days; // Already an array of day names
     
@@ -740,7 +736,13 @@ function generateSchedule() {
 
     saveToLocalStorage();
     renderSchedule();
-    alert('New schedule has been generated!');
+    showTemporaryMessage('New schedule has been generated!', 'success');
+    
+    // Hide the confirmation modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmGenerateModal'));
+    if (modal) {
+        modal.hide();
+    }
 }
 
 // Print the schedule
@@ -787,7 +789,7 @@ function printSchedule() {
 function exportToExcel() {
     const table = document.querySelector('#schedule table');
     if (!table) {
-        alert('No schedule table found to export.');
+        showTemporaryMessage('No schedule table found to export.', 'warning');
         return;
     }
     const wb = XLSX.utils.table_to_book(table, { sheet: "Schedule" });
@@ -814,7 +816,7 @@ function exportToPDF() {
 function exportToJPG() {
     const scheduleElement = document.getElementById('schedule');
     if (!scheduleElement) {
-        alert('No schedule found to export.');
+        showTemporaryMessage('No schedule found to export.', 'warning');
         return;
     }
 
@@ -834,7 +836,7 @@ function exportToJPG() {
         link.click();
     }).catch(err => {
         console.error('Error exporting to JPG:', err);
-        alert('An error occurred while exporting the schedule as a JPG image.');
+        showTemporaryMessage('An error occurred while exporting the schedule as a JPG image.', 'error');
     }).finally(() => {
         // Always remove the export class
         document.body.classList.remove('export-mode');
@@ -846,27 +848,107 @@ function showEditShiftModal(employeeId, day) {
     if (!employee) return;
 
     const currentShift = employee.shifts[day] || 'OFF';
-    const newShift = prompt(`Enter new shift for ${employee.name} on ${day} (current: ${getShiftDisplay(currentShift)}):`, getShiftDisplay(currentShift));
-
-    if (newShift !== null) {
-        const parsedShift = parseShiftInput(newShift);
-        
-        // Count current off days
-        const currentOffDays = Object.values(employee.shifts).filter(shift => shift === 'OFF').length;
-        const isChangingToOff = parsedShift === 'OFF';
-        const isCurrentDayOff = currentShift === 'OFF';
-        
-        // If trying to set a new day off when already having one off day (and not replacing an existing off day)
-        if (isChangingToOff && currentOffDays >= 1 && !isCurrentDayOff) {
-            alert('Each employee can only have one day off per week. Please modify the existing off day first.');
-            return;
-        }
-        
-        // If changing from off day to working day, or within the one-off-day limit
-        employee.shifts[day] = parsedShift;
-        saveToLocalStorage();
-        renderSchedule();
+    const modal = document.getElementById('editShiftModal');
+    
+    // Set modal values
+    document.getElementById('editShiftEmployeeId').value = employeeId;
+    document.getElementById('editShiftDay').value = day;
+    document.getElementById('editShiftEmployeeName').textContent = employee.name;
+    document.getElementById('editShiftDayDisplay').textContent = day;
+    document.getElementById('shiftType').value = currentShift;
+    
+    // Check for existing off days and show warning if needed
+    const currentOffDays = Object.values(employee.shifts).filter(shift => shift === 'OFF').length;
+    const isCurrentDayOff = currentShift === 'OFF';
+    const offDayWarning = document.getElementById('offDayWarning');
+    
+    if (currentOffDays >= 1 && !isCurrentDayOff) {
+        offDayWarning.style.display = 'block';
+    } else {
+        offDayWarning.style.display = 'none';
     }
+    
+    // Initialize the modal
+    const bsModal = new bootstrap.Modal(modal);
+    
+    // Handle modal events for better accessibility
+    const handleShown = () => {
+        // Focus the first focusable element in the modal
+        const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable) focusable.focus();
+    };
+    
+    const handleHidden = () => {
+        // Clean up event listeners
+        modal.removeEventListener('shown.bs.modal', handleShown);
+        modal.removeEventListener('hidden.bs.modal', handleHidden);
+        
+        // Restore focus to the button that opened the modal
+        const triggerButton = document.querySelector(`[data-bs-toggle="modal"][data-bs-target="#editShiftModal"]`);
+        if (triggerButton) triggerButton.focus();
+    };
+    
+    // Add event listeners
+    modal.addEventListener('shown.bs.modal', handleShown);
+    modal.addEventListener('hidden.bs.modal', handleHidden);
+    
+    // Show the modal
+    bsModal.show();
+    
+    // Return the modal instance for external use if needed
+    return bsModal;
+}
+
+// Save shift changes from the modal
+function saveShiftChanges() {
+    const modalElement = document.getElementById('editShiftModal');
+    const employeeId = parseInt(document.getElementById('editShiftEmployeeId').value);
+    const day = document.getElementById('editShiftDay').value;
+    const newShift = document.getElementById('shiftType').value;
+    
+    const employee = state.employees.find(emp => emp.id === employeeId);
+    if (!employee) return;
+    
+    // Update the shift for the selected day
+    employee.shifts[day] = newShift;
+    
+    // Update the updatedAt timestamp
+    employee.updatedAt = new Date().toISOString();
+    
+    saveToLocalStorage();
+    renderSchedule();
+    
+    // Hide the modal using the Bootstrap 5 method
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+        modal.hide();
+    } else {
+        // Fallback in case the modal instance isn't available
+        const bsModal = new bootstrap.Modal(modalElement);
+        bsModal.hide();
+    }
+}
+
+// Clear shift (set to OFF)
+function clearShift() {
+    document.getElementById('shiftType').value = 'OFF';
+}
+
+// Setup event listeners for the shift edit modal
+function setupShiftModalListeners() {
+    // Save button
+    document.getElementById('saveShiftBtn').addEventListener('click', saveShiftChanges);
+    
+    // Clear button
+    document.getElementById('clearShiftBtn').addEventListener('click', clearShift);
+    
+    // Handle enter key in the modal
+    document.getElementById('editShiftModal').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            saveShiftChanges();
+        }
+    });
 }
 
 // Add drag and drop functionality
@@ -1169,6 +1251,7 @@ function setupDragAndDrop() {
 // Initialize drag and drop when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     setupDragAndDrop();
+    setupShiftModalListeners();
 });
 
 // CSS styles are now defined at the top of the file
