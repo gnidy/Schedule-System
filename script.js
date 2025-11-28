@@ -31,31 +31,84 @@ function initializeSampleData() {
     if (state.employees.length === 0) {
         // Clear any existing employees
         state.employees = [];
-        state.employees = [
-            createEmployee('DIDIER', 'Manager', {
-                'Friday': '8--5', 'Saturday': '8--5', 'Sunday': '8--5',
-                'Monday': 'OFF', 'Tuesday': 'OFF', 'Wednesday': '12--12', 'Thursday': '12--12'
-            }),
-            createEmployee('MAHMOUD', 'Supervisor', {
-                'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
-                'Monday': '12--9', 'Tuesday': '12--9', 'Wednesday': 'OFF', 'Thursday': 'OFF'
-            }),
-            createEmployee('GEOFFREY', 'Team Member', {
-                'Friday': '8--5', 'Saturday': '8--5', 'Sunday': '8--5',
-                'Monday': '8--5', 'Tuesday': 'OFF', 'Wednesday': '8--5', 'Thursday': '8--5'
-            }),
-            createEmployee('FAISAL', 'Team Member', {
-                'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
-                'Monday': '12--9', 'Tuesday': '12--9', 'Wednesday': '12--9', 'Thursday': '12--9'
-            }),
-            createEmployee('ABDULRAHMAN', 'Team Member', {
-                'Friday': '5--2', 'Saturday': '5--2', 'Sunday': '5--2',
-                'Monday': '5--2', 'Tuesday': '5--2', 'Wednesday': '5--2', 'Thursday': '5--2'
-            }),
-            createEmployee('MOHAMMED', 'Team Member', {
-                'Friday': '7--4', 'Saturday': '7--4', 'Sunday': '7--4',
-                'Monday': '7--4', 'Tuesday': '7--4', 'Wednesday': '7--4', 'Thursday': '7--4'
-            })
+                state.employees = [
+            {
+                id: 1764346685641,
+                name: 'DIDIER',
+                role: 'Manager',
+                shifts: {
+                    'Friday': '8--5', 'Saturday': '8--5', 'Sunday': '8--5',
+                    'Monday': '8--5', 'Tuesday': '8--5', 'Wednesday': 'OFF', 'Thursday': '12--12'
+                },
+                createdAt: '2025-11-28T16:18:05.504Z',
+                updatedAt: '2025-11-28T16:18:05.504Z'
+            },
+            {
+                id: 1764346686165,
+                name: 'MAHMOUD',
+                role: 'Supervisor',
+                shifts: {
+                    'Friday': '5--2', 'Saturday': '5--2', 'Sunday': '5--2',
+                    'Monday': '5--2', 'Tuesday': '5--2', 'Wednesday': '12--12', 'Thursday': 'OFF'
+                },
+                createdAt: '2025-11-28T16:18:05.504Z',
+                updatedAt: '2025-11-28T16:19:18.599Z'
+            },
+            {
+                id: 1764346685572,
+                name: 'GEOFFREY',
+                role: 'Team Member',
+                shifts: {
+                    'Friday': '7--4', 'Saturday': '7--4', 'Sunday': '7--4',
+                    'Monday': '7--4', 'Tuesday': '7--4', 'Wednesday': '7--4', 'Thursday': 'OFF'
+                },
+                createdAt: '2025-11-28T16:18:05.504Z',
+                updatedAt: '2025-11-28T16:18:05.504Z'
+            },
+            {
+                id: 1764346686087,
+                name: 'ABDULRAHMAN',
+                role: 'Team Member',
+                shifts: {
+                    'Friday': '8--5', 'Saturday': '8--5', 'Sunday': 'OFF',
+                    'Monday': '8--5', 'Tuesday': '8--5', 'Wednesday': '7--4', 'Thursday': '7--4'
+                },
+                createdAt: '2025-11-28T16:18:05.505Z',
+                updatedAt: '2025-11-28T16:18:05.505Z'
+            },
+            {
+                id: 1764346685908,
+                name: 'GAWAD',
+                role: 'Team Member',
+                shifts: {
+                    'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
+                    'Monday': 'OFF', 'Tuesday': '12--9', 'Wednesday': '12--9', 'Thursday': '12--9'
+                },
+                createdAt: '2025-11-28T16:18:05.505Z',
+                updatedAt: '2025-11-28T16:19:59.361Z'
+            },
+            {
+                id: 1764346686496,
+                name: 'SUSHMITA',
+                role: 'Cashier',
+                shifts: {
+                    'Friday': '12--9', 'Saturday': '12--9', 'Sunday': '12--9',
+                    'Monday': '12--9', 'Tuesday': '12--9', 'Wednesday': 'OFF', 'Thursday': '12--9'
+                },
+                createdAt: '2025-11-28T16:18:05.505Z',
+                updatedAt: '2025-11-28T16:18:41.595Z'
+            },
+            {
+                id: 1764346686258,
+                name: 'BASANTI',
+                role: 'Cashier',
+                shifts: {
+                    'Friday': '7--4', 'Saturday': '7--4', 'Sunday': '7--4',
+                    'Monday': '7--4', 'Tuesday': 'OFF', 'Wednesday': '7--4', 'Thursday': 'OFF'
+                },
+                createdAt: '2025-11-28T16:18:05.505Z',
+                updatedAt: '2025-11-28T16:19:07.153Z'
+            }
         ];
         saveToLocalStorage();
     }
@@ -258,11 +311,15 @@ function renderSchedule() {
         : [...state.employees];
     
     // Sort employees by role (managers first, then supervisors, then others)
+    // and then by creation date (oldest first)
     const roleOrder = { 'Manager': 1, 'Supervisor': 2 };
     filteredEmployees.sort((a, b) => {
         const roleA = roleOrder[a.role] || 3;
         const roleB = roleOrder[b.role] || 3;
-        return roleA - roleB || a.name.localeCompare(b.name);
+        if (roleA !== roleB) {
+            return roleA - roleB;  // Sort by role first
+        }
+        return new Date(a.createdAt) - new Date(b.createdAt);  // Then by creation date
     });
     
     // Create table element
